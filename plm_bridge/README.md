@@ -27,7 +27,7 @@ itself is standard library only.
 plm_bridge/
 ├── core/
 │   ├── catalog.py        Catalog: reconciliation, geometry cache, plans, selection, status
-│   ├── runs.py           inspection runs and result bundles
+│   ├── runs.py           inspection runs and result bundles (record_run: the RecordRun service)
 │   ├── schema.py         SQLite schema, versioned migrations (PRAGMA user_version), CatalogDB
 │   ├── paths.py          cache layout (storage_key), legacy-path resolution
 │   ├── config.py         CoreConfig (to_dict -> ROS parameters)

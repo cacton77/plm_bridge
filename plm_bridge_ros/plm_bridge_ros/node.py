@@ -12,6 +12,7 @@ One node hosts every configured backend (`catalog.backends`, from
     <ns>/record_plan      -- record a plan the producer wrote (plan contract)
     <ns>/upload_plan      -- upload a recorded plan on demand
     <ns>/upload_results   -- upload an inspection run's result bundle
+    <ns>/record_run       -- record a finished run and its bundle (optionally upload)
 
     /<ns>/part_selected   -- PartSelected, latched for late joiners
     /<ns>/sync_complete   -- SyncResult after every sync pass, per backend
@@ -34,6 +35,7 @@ run on a background worker, and service handlers that touch the network are
 in a reentrant callback group.
 """
 
+import json
 import threading
 
 import rclpy
@@ -46,8 +48,8 @@ from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPo
 from plm_interfaces.msg import (BackendInfo, PartSelected, PartSummary)
 from plm_interfaces.msg import SyncResult as SyncResultMsg
 from plm_interfaces.srv import (DescribePlans, EnsurePlan, ListBackends,
-                                                 ListParts, RecordPlan, SelectPart, SyncNow,
-                                                 UploadPlan, UploadResults)
+                                ListParts, RecordPlan, RecordRun, SelectPart, SyncNow,
+                                UploadPlan, UploadResults)
 
 from plm_bridge.core.catalog import PlanStatus
 from plm_bridge.core.config import CoreConfig
@@ -132,7 +134,8 @@ class PLMBridgeNode(rclpy.node.Node):
                 (EnsurePlan, 'ensure_plan', self.ensure_plan_callback),
                 (RecordPlan, 'record_plan', self.record_plan_callback),
                 (UploadPlan, 'upload_plan', self.upload_plan_callback),
-                (UploadResults, 'upload_results', self.upload_results_callback)):
+                (UploadResults, 'upload_results', self.upload_results_callback),
+                (RecordRun, 'record_run', self.record_run_callback)):
             self.create_service(srv_type, f'{ns}/{name}', callback, callback_group=services)
 
         # Latched: a picker or GUI that starts after a selection still learns
@@ -537,6 +540,28 @@ class PLMBridgeNode(rclpy.node.Node):
         response.remote_ref = ref or ''
         response.message = message
         (self.get_logger().info if ref else self.get_logger().error)(message)
+        return response
+
+    def record_run_callback(self, request, response):
+        """Record a finished inspection run and its result bundle."""
+        try:
+            anomalies = json.loads(request.anomalies_json) if request.anomalies_json else []
+        except ValueError as e:
+            response.success = False
+            response.message = f'anomalies_json is not valid JSON: {e}'
+            return response
+        outcome = self.catalog.record_run(
+            self._backend_name(request.backend), request.part_id,
+            bundle_path=request.bundle_path, run_id=request.run_id or None,
+            plan_id=request.plan_id or None, anomalies=anomalies,
+            viewpoints_executed=request.viewpoints_executed,
+            viewpoints_skipped=request.viewpoints_skipped,
+            started_at=request.started_at or None, upload=request.upload)
+        for field in ('success', 'run_id', 'manifest_path', 'bundle_path', 'remote_ref',
+                      'message'):
+            setattr(response, field, outcome[field])
+        (self.get_logger().info if outcome['success'] else self.get_logger().error)(
+            f"RecordRun {outcome['run_id']}: {outcome['message']}")
         return response
 
     def ensure_plan_callback(self, request, response):

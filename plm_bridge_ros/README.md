@@ -27,7 +27,7 @@ a backend's settings is `<backend>.<field>` (e.g. `dx3.bookmark_scope`).
 Credentials are never parameters; they come from the environment.
 
 Services and topics: `<ns>/{list_backends, list_parts, select_part, sync_now,
-ensure_plan, record_plan, upload_plan, upload_results}`, `/<ns>/part_selected`
+ensure_plan, record_plan, upload_plan, upload_results, record_run}`, `/<ns>/part_selected`
 (latched) and `/<ns>/sync_complete`. See `plm_interfaces`.
 
 The picker is reachable at `http://<host>:<picker_port>` (the cell's

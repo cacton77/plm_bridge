@@ -117,7 +117,8 @@ used are unchanged:
 
 - **Services:** `<ns>/list_backends`, `list_parts`, `select_part`,
   `sync_now`, `ensure_plan`, `record_plan`, `upload_plan` (by `plan_id`),
-  `upload_results` (by `run_id`).
+  `upload_results` (by `run_id`), and `record_run`, which records a finished
+  inspection run and its bundle (optionally uploading it) in one call.
 - **Topics:** `/<ns>/part_selected` (latched) and `/<ns>/sync_complete`
   (one message per backend per pass).
 - **Client:** `catalog.describe_plans_service` (the producer's

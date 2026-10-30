@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from plm_bridge.backends.base import (BackendError, Capability,
-                                                        part_from_row)
+                                      part_from_row)
 from plm_bridge.core.schema import utc_now
 
 MANIFEST = 'result_manifest.json'
@@ -35,7 +35,7 @@ def _file_kind(path):
 class RunsMixin:
     """Inspection-run bookkeeping for `Catalog`."""
 
-    def start_run(self, backend_name, part_id, run_id=None, plan_id=None):
+    def start_run(self, backend_name, part_id, run_id=None, plan_id=None, started_at=None):
         """Record the start of an inspection run.
 
         Returns:
@@ -44,15 +44,66 @@ class RunsMixin:
         if self.db.get_part(backend_name, part_id) is None:
             return None, f'Unknown part: {backend_name}/{part_id}.'
         if run_id is None:
-            run_id = 'run_' + datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            # Second resolution, disambiguated: two runs can start in one second.
+            base = 'run_' + datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            run_id, counter = base, 2
+            while self.db.get_run(run_id) is not None:
+                run_id, counter = f'{base}_{counter}', counter + 1
         if plan_id is None:
             current = self.db.get_current_plan(backend_name, part_id)
             plan_id = current['plan_id'] if current else None
         self.db.create_run({'run_id': run_id, 'backend': backend_name, 'part_id': part_id,
-                            'plan_id': plan_id, 'started_at': utc_now(),
+                            'plan_id': plan_id, 'started_at': started_at or utc_now(),
                             'status': 'running'})
         self.db.log_sync('run_started', backend_name, part_id, run_id)
         return run_id, f'Started inspection run {run_id}.'
+
+    def record_run(self, backend_name, part_id, bundle_path='', run_id=None, plan_id=None,
+                   anomalies=None, viewpoints_executed=None, viewpoints_skipped=0,
+                   started_at=None, upload=False):
+        """Record a finished inspection run in one call (the RecordRun service).
+
+        Creates the run (or updates an existing `run_id`), points it at the
+        caller's bundle directory, writes the manifest, and uploads when asked.
+
+        Returns:
+            dict: success, run_id, manifest_path, bundle_path, remote_ref, message.
+        """
+        outcome = {'success': False, 'run_id': run_id or '', 'manifest_path': '',
+                   'bundle_path': '', 'remote_ref': '', 'message': ''}
+        if bundle_path and not Path(bundle_path).is_dir():
+            outcome['message'] = f'Result bundle directory not found: {bundle_path}.'
+            return outcome
+        if run_id is None or self.db.get_run(run_id) is None:
+            run_id, message = self.start_run(backend_name, part_id, run_id=run_id,
+                                             plan_id=plan_id, started_at=started_at)
+            if run_id is None:
+                outcome['message'] = message
+                return outcome
+        run = self.db.get_run(run_id)
+        if (run['backend'], run['part_id']) != (backend_name, part_id):
+            outcome['message'] = f'Run {run_id} belongs to another part.'
+            return outcome
+        updates = {'viewpoints_skipped': viewpoints_skipped or 0}
+        if viewpoints_executed is not None:
+            updates['viewpoints_executed'] = viewpoints_executed
+        if bundle_path:
+            updates['result_bundle_path'] = str(bundle_path)
+        self.db.update_run(run_id, **updates)
+
+        manifest, message = self.build_result_manifest(run_id, anomalies=anomalies)
+        outcome['run_id'] = run_id
+        if manifest is None:
+            outcome['message'] = message
+            return outcome
+        outcome.update(success=True, manifest_path=str(manifest),
+                       bundle_path=str(manifest.parent), message=message)
+        if upload:
+            ref, upload_message = self.upload_results(run_id)
+            outcome['remote_ref'] = ref or ''
+            outcome['success'] = ref is not None
+            outcome['message'] = f'{message} {upload_message}'
+        return outcome
 
     def result_dir_for(self, run):
         """The bundle directory of a run (where its files belong)."""

@@ -17,7 +17,7 @@ import pytest
 from http_replay import ReplayAdapter
 
 from plm_bridge.backends.base import (Capability, PLMBackend, RemotePart,
-                                                        RemoteRef)
+                                      RemoteRef)
 from plm_bridge.backends.dx3 import client as client_module
 from plm_bridge.backends.dx3.backend import DX3Backend
 from plm_bridge.backends.dx3.client import DXClient

@@ -17,6 +17,9 @@ repository and generalized over PLM backends.
   the `dx3` (3DEXPERIENCE) backend; the `plm-bridge` CLI; a backend contract
   test suite with sanitized HTTP replay.
 - `plm_bridge_ros`: the `plm_bridge` node and `plm_bridge.launch.py`.
+- `RecordRun`: the node that finishes an inspection can record the run and
+  its result bundle, and upload it, in one call. This exposes the
+  inspection-run functions, which nothing in the cell could reach before.
 - The plan contract: the bridge never opens plan files. The producer embeds
   the bridge's `plm_context` and describes its plans (`RecordPlan` fields,
   `DescribePlans`).

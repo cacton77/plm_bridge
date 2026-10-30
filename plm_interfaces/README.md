@@ -15,6 +15,7 @@ empty `backend` in a request means the only hosted backend, or for
 | `srv/SyncNow`, `srv/EnsurePlan` | cell -> bridge | sync on demand; plan validity |
 | `srv/RecordPlan` | producer -> bridge | record a plan as the producer describes it (the bridge never opens it) |
 | `srv/UploadPlan`, `srv/UploadResults` | cell -> bridge | upload a recorded plan (by `plan_id`) or a run's result bundle (by `run_id`) |
+| `srv/RecordRun` | inspection node -> bridge | record a finished run and its result bundle (the bridge writes `result_manifest.json`), optionally uploading it; raises an issue above the NCR threshold |
 | `srv/DescribePlans` (with `msg/PlanDescription`) | bridge -> producer | describe plan files the bridge found on disk |
 
 `plan_status` values: `CURRENT`, `DOWNLOADED`, `UPDATED_FROM_REMOTE`,

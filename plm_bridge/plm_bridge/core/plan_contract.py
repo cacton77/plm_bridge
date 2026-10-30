@@ -1,9 +1,9 @@
 """The contract between the catalog and whatever produces inspection plans.
 
 The catalog never opens a plan file to learn anything about it. The producer
-(for the inspection cell, ViewpointGeneration) owns the plan format; the catalog stores, versions and
-uploads the file as an opaque blob, and learns everything it records about a
-plan from the producer:
+(for the inspection cell, ViewpointGeneration) owns the plan format; the
+catalog stores, versions and uploads the file as an opaque blob, and learns
+everything it records about a plan from the producer:
 
 * **On selection** the catalog publishes, with `PartSelected`, the PLM
   context it authored for the part (`plm_context_json`) and the directory new

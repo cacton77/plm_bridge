@@ -15,6 +15,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ListBackends.srv"
   "srv/ListParts.srv"
   "srv/RecordPlan.srv"
+  "srv/RecordRun.srv"
   "srv/SelectPart.srv"
   "srv/SyncNow.srv"
   "srv/UploadPlan.srv"

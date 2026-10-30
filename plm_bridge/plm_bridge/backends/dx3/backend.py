@@ -24,10 +24,10 @@ import logging
 from pathlib import Path
 
 from plm_bridge.backends.base import (BackendAuthError, BackendError,
-                                                        Capability, RemotePart,
-                                                        RemoteRef, ScopeTruncated)
+                                      Capability, RemotePart,
+                                      RemoteRef, ScopeTruncated)
 from plm_bridge.backends.dx3.client import (DXAPIError, DXAuthError,
-                                                              DXClient)
+                                            DXClient)
 from plm_bridge.backends.dx3.config import DX3Settings, DXConfig
 
 logger = logging.getLogger(__name__)

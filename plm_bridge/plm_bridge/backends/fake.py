@@ -12,8 +12,8 @@ from dataclasses import replace
 from pathlib import Path
 
 from plm_bridge.backends.base import (BackendError, Capability,
-                                                        RemotePart, RemoteRef,
-                                                        ScopeTruncated)
+                                      RemotePart, RemoteRef,
+                                      ScopeTruncated)
 
 logger = logging.getLogger(__name__)
 

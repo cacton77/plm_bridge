@@ -193,3 +193,48 @@ def test_a_failed_write_reaches_the_operator(make_catalog):
     plan_id, message = _record(catalog, 'fake', 'P')
     assert 'refused the upload' in message
     assert catalog.db.get_plan(plan_id)['upload_status'] == 'failed'
+
+
+def test_record_run_writes_the_manifest_and_uploads(make_catalog, tmp_path):
+    backend = FakeBackend()
+    backend.add_part('P')
+    catalog = make_catalog(backend)
+    catalog.run_full_sync()
+    bundle = tmp_path / 'inspection' / 'run_x'
+    bundle.mkdir(parents=True)
+    (bundle / 'view_000.png').write_bytes(b'png')
+
+    outcome = catalog.record_run('fake', 'P', bundle_path=str(bundle), run_id='run_x',
+                                 anomalies=[{'score': 0.97}], viewpoints_executed=12,
+                                 upload=True)
+
+    assert outcome['success'], outcome['message']
+    assert outcome['manifest_path'] == str(bundle / 'result_manifest.json')
+    assert outcome['remote_ref'] and backend.attachments[-1]['kind'] == 'result_bundle'
+    assert set(backend.attachments[-1]['files']) == {'view_000.png', 'result_manifest.json'}
+    assert len(backend.issues) == 1                      # 0.97 > the 0.8 threshold
+    run = catalog.db.get_run('run_x')
+    assert (run['viewpoints_executed'], run['status'], run['upload_status']) == (
+        12, 'completed', 'uploaded')
+
+
+def test_record_run_without_upload_stays_local(make_catalog):
+    backend = FakeBackend()
+    backend.add_part('P')
+    catalog = make_catalog(backend)
+    catalog.run_full_sync()
+    outcome = catalog.record_run('fake', 'P', anomalies=[])
+    assert outcome['success'] and outcome['remote_ref'] == ''
+    assert backend.attachments == []
+    assert catalog.record_run('fake', 'P', bundle_path='/no/such/dir')['success'] is False
+    assert catalog.record_run('fake', 'missing')['success'] is False
+
+
+def test_generated_run_ids_are_unique_within_a_second(make_catalog):
+    backend = FakeBackend()
+    backend.add_part('P')
+    catalog = make_catalog(backend)
+    catalog.run_full_sync()
+    first, _ = catalog.start_run('fake', 'P')
+    second, _ = catalog.start_run('fake', 'P')
+    assert first != second

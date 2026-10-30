@@ -1,0 +1,20 @@
+# Record a finished inspection run and its result bundle; optionally upload it.
+# Called by the node that executed the inspection. The caller's files stay
+# where they are; the bridge writes the bundle's result_manifest.json.
+string backend
+string part_id
+string run_id                 # '' = generate one; an existing run_id is updated
+string plan_id                # '' = the part's current plan
+string bundle_path            # directory holding the run's files ('' = the bridge's default)
+string anomalies_json         # JSON list of objects with at least "score"; '' = none
+int32 viewpoints_executed
+int32 viewpoints_skipped
+string started_at             # ISO-8601 UTC ('' = now)
+bool upload                   # upload now; raises an issue above the NCR threshold
+---
+bool success
+string run_id
+string manifest_path
+string bundle_path
+string remote_ref             # '' when not uploaded
+string message

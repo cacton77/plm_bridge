@@ -25,8 +25,8 @@ from enum import Enum
 from pathlib import Path
 
 from plm_bridge.backends.base import (BackendError,
-                                                        Capability, ScopeTruncated,
-                                                        part_from_row)
+                                      Capability, ScopeTruncated,
+                                      part_from_row)
 from plm_bridge.core import plan_contract
 from plm_bridge.core.config import CoreConfig
 from plm_bridge.core.paths import CatalogPaths, storage_key
