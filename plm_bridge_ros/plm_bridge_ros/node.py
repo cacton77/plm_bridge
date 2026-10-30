@@ -107,7 +107,7 @@ class PLMBridgeNode(rclpy.node.Node):
         for message in errors:
             self.get_logger().error(message)
         # Each backend's non-secret settings become <backend>.<field>.
-        for name, backend in self.core.backends.items():
+        for name, backend in self.catalog.backends.items():
             settings = getattr(backend, 'settings', None)
             if settings is not None and hasattr(settings, 'to_dict'):
                 self._declare_from(settings, name)
@@ -174,7 +174,7 @@ class PLMBridgeNode(rclpy.node.Node):
         self.get_logger().info(
             f"Catalog node ready: {self.catalog.db.counts()['total']} parts in "
             f'{self.catalog.paths.db_path}; backends: '
-            f"{', '.join(sorted(self.core.backends)) or 'none'}")
+            f"{', '.join(sorted(self.catalog.backends)) or 'none'}")
 
     # --- parameters ---------------------------------------------------------------
 
@@ -196,8 +196,8 @@ class PLMBridgeNode(rclpy.node.Node):
                     self.get_logger().warn(f'{param.name} takes effect at the next start.')
                 elif field == 'sync_interval':
                     self._restart_sync_timer()
-            elif prefix in self.core.backends:
-                settings = getattr(self.core.backends[prefix], 'settings', None)
+            elif prefix in self.catalog.backends:
+                settings = getattr(self.catalog.backends[prefix], 'settings', None)
                 if settings is not None and field in settings.to_dict():
                     setattr(settings, field, param.value)
             else:
@@ -231,14 +231,14 @@ class PLMBridgeNode(rclpy.node.Node):
     # --- helpers -------------------------------------------------------------------
 
     def _any_configured(self):
-        return any(b.is_configured()[0] for b in self.core.backends.values())
+        return any(b.is_configured()[0] for b in self.catalog.backends.values())
 
     def _backend_name(self, requested):
         """The backend a request means: as given, or the only one hosted."""
         if requested:
             return requested
-        if len(self.core.backends) == 1:
-            return next(iter(self.core.backends))
+        if len(self.catalog.backends) == 1:
+            return next(iter(self.catalog.backends))
         return ''
 
     # --- picker and plan producer ------------------------------------------------
@@ -386,7 +386,7 @@ class PLMBridgeNode(rclpy.node.Node):
         # services stay live meanwhile.
         if self._sync_thread is not None:
             self._sync_thread.join()
-        names = [backend] if backend else sorted(self.core.backends)
+        names = [backend] if backend else sorted(self.catalog.backends)
         results = [self.catalog.last_results[name] for name in names
                    if name in self.catalog.last_results
                    and self.catalog.last_results[name] is not before.get(name)]
