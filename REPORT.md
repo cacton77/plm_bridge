@@ -56,11 +56,37 @@ How the smoke run works, and its limits:
   a pre-existing VG quirk (see open issues), so S5 was re-evaluated from the
   log against what the checklist actually asks.
 
+## Phase 1: cut the couplings in place
+
+ViewpointGeneration `plm-bridge` commit `88445ad`.
+
+- **Plan contract.** `catalog/plan_contract.py` is in place, and the catalog
+  imports no `plan_io`. `PartSelected` gained `plan_dir` and
+  `plm_context_json`. `RecordPlan` gained `stage_rank`, `summary_json`,
+  `summary_text`, `change_token` and `generated_at`, alongside the old fields.
+- **Plans table.** It has new columns, and versioned migrations
+  (`PRAGMA user_version`) back the database up first. A copy of the real
+  `catalog.db` (11 plan rows across 2 parts) migrated with a `.bak` file
+  written; the legacy counts became `summary_text`/`stage_rank`.
+- **Orphan adoption.** It moved to the producer through a new
+  `DescribePlans` service on the VG node, plus a
+  `plan_io describe` CLI for the catalog CLI. The plan suggested "a CLI
+  subcommand or a node service"; I did both, and the catalog only ever lists
+  file names. **Behaviour change:** an adopted file is now recorded with its
+  *own* change token when it has one. Previously every adopted file took the
+  part's current cestamp, so an old file was always shown as CURRENT.
+- **Picker.** It runs inside the catalog node with injected callbacks, and
+  `picker_node` is gone.
+- **Thumbnails.** They load STEP only through `catalog/cad.py`.
+- **Tests.** 50 pass. Live smoke S1–S6 all pass, plus X1 (the picker's
+  "Scan for files" adopting an orphan plan through `describe_plans`).
+
 ## Tenant objects created
 
 | When (UTC) | System | Kind | ID | Title | By |
 |---|---|---|---|---|---|
 | 2026-10-30T21:36:56Z | 3DX | Document | `F74C7BC56D720F006AE50DF600026546` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 0 smoke S4 |
+| 2026-10-30T21:39:58Z | 3DX | Document | `9B76B1F917A924006AE50EAB00023334` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 1 smoke S4 |
 
 ## Open issues found so far
 
