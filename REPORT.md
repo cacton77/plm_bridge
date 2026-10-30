@@ -81,12 +81,47 @@ ViewpointGeneration `plm-bridge` commit `88445ad`.
 - **Tests.** 50 pass. Live smoke S1–S6 all pass, plus X1 (the picker's
   "Scan for files" adopting an orphan plan through `describe_plans`).
 
+## Phase 2: introduce the backend abstraction
+
+ViewpointGeneration `plm-bridge` commit `52ae8b6`.
+
+- **Protocol** (`catalog/backends/base.py`), close to the plan's sketch. The
+  deviations are listed below.
+- **Moves.** `registry.py`, an in-memory `fake.py`, and `backends/dx3/`
+  (client, config, backend, JMS) are in place. The core
+  (`catalog/core/`) imports only `backends.base`.
+- **Identity.** It is `(backend, part_id)` with an opaque `change_token`.
+  Cache paths use `storage_key`, and the legacy cache layout is resolved
+  read-only, with no files moved and nothing re-downloaded.
+- **Migration step 2.** It rebuilds the tables. **Verified on a copy of
+  the real `catalog.db`:** 6 parts identical; all 7 plan rows kept, with IDs,
+  tokens, file paths, generation times, stages and Document IDs; all 426
+  sync-log entries kept; a `.bak` written.
+- **Interfaces.** They now have the Section 4.6 shapes (still in
+  `viewpoint_generation_interfaces`). Plans are schema 3.0, and the 2.0
+  reader is kept.
+- **Capabilities.** The core honours them, and the picker labels parts by
+  backend and hides uploads a backend cannot do.
+- **Contract tests.** They run over the fake backend and over dx3 replaying
+  29 HTTP interactions recorded live on 2026-10-30 and sanitized at record
+  time. Sanitization covered tenant IDs and hosts, organization, space and
+  user names, first and last names, the CSRF token echoed in document
+  responses, FCS tickets and receipts, and STEP bytes. One interaction (the
+  FCS upload) is synthetic, because the client posts it outside the recorded
+  session.
+- **Tests.** 90 pass, with 2 skips: the copyright check, and dx3 Issue
+  creation, which isn't recorded because test runs may not create Issues.
+- **Live smoke S1–S6.** All pass, plus X1 (Scan for files through the
+  producer) and X2 (`list_backends`). S3 now downloads into the new layout.
+
 ## Tenant objects created
 
 | When (UTC) | System | Kind | ID | Title | By |
 |---|---|---|---|---|---|
 | 2026-10-30T21:36:56Z | 3DX | Document | `F74C7BC56D720F006AE50DF600026546` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 0 smoke S4 |
 | 2026-10-30T21:39:58Z | 3DX | Document | `9B76B1F917A924006AE50EAB00023334` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 1 smoke S4 |
+| 2026-10-30T22:00:40Z | 3DX | Document | `F74C7BC56D720F006AE5138700026864` | `TEST_PLM_BRIDGE_CONTRACT_PLAN` | Phase 2 contract fixture recording |
+| 2026-10-30T22:08:17Z | 3DX | Document | `9B76B1F917A924006AE51550000237A2` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 2 smoke S4 |
 
 ## Open issues found so far
 
