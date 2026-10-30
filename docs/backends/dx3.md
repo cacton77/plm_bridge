@@ -55,6 +55,30 @@ except four `TEST_PLM_BRIDGE_*` Documents):
 - **The FCS upload is sent outside the client's session** (`requests.post`,
   since FCS authenticates by job ticket), and it carries the ticket raw in a
   form field while the download ticket travels URL-encoded in a query.
+- **Engineering attributes (material, finish) are not available** on the
+  verified parts:
+  - `dseng:EngItem/{id}?$mask=dsmveng:EngItemMask.Details` works (200),
+    though `dskern:Mask.Details` does not. It returns the usual fields plus
+    `dseng:EnterpriseReference` and `isManufacturable`, but no
+    `dseno:EnterpriseAttributes` block. `dseng:EnterpriseReference` is empty.
+  - `dsxcad:Part/{id}/dsxcad:xCADAttributes` (route from Dassault's SDK)
+    works but holds only `cadorigin: SOLIDWORKS` on all 6 parts. The
+    SolidWorks custom properties (where material usually lives) are not
+    carried into 3DX for these parts.
+  - There is no materials service in the SDK. Whether material could be
+    exposed is a modelling question (enterprise attributes, or SolidWorks
+    properties mapped on save), not an API gap the client can work around.
+    (`tools/dx3_probe_attributes.py`)
+- **A Document-to-item route exists for reading.**
+  `GET documents/parentId/{engItemId}?parentRelName=SpecificationDocument&parentDirection=from`
+  (also `Reference Document`, either direction) answers 200 with an empty,
+  validated list. A nonexistent parent answers
+  `400 "Invalid Business Object Specified."`, so the route is real, not a
+  catch-all. Its counterpart in the same 3DSpace Documents API,
+  `POST documents/parentId/{id}`, would create a Document attached to the
+  item. That write was **not** tried: it modifies a real engineering item,
+  which test runs may not do (see QUESTIONS.md).
+  (`tools/dx3_probe_document_parent.py`)
 - **Expired or wrong credentials** look the same as before: the passport
   re-renders its form with status 200 and no CASTGC cookie. The cell's own
   sync log showed this failure continuously from 2026-10-15 until the
