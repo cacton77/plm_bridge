@@ -24,7 +24,5 @@
    identity, so another uploader's same-titled document would match; and
    every `ensure_plan` that misses locally costs one search call.
    *Default: not built.*
-2. **Merging.** When you merge inspection-docker `plm-bridge`, first discard
-   (or stash) your uncommitted copy of the reorganisation, since the branch
-   already has it. Your `docs/onshape_integration/` is not on the branch;
-   commit it yourself if you want it there.
+2. **Merging: done** (2026-10-30). ViewpointGeneration `main` = `3ffc150`,
+   inspection-docker `main` = `10bab66`.

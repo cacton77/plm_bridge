@@ -28,6 +28,7 @@ Phases 0, 1, 2, 4 and 5 and both stretch items were.
 | 4. Extract | Four packages in this repository with fresh history. ViewpointGeneration depends only on `plm_interfaces` and `cad_loader`. inspection-docker wired in. 3DX docs moved here, scrubbed. Clean `colcon build`. Tests pass, including in a plain Python 3.12 virtualenv with no ROS. Live smoke S1–S6 on the extracted packages. | plm_bridge `fbdd07b`, VG `b23e871`, inspection-docker `2f4efa8` |
 | 5. Docs and release prep | READMEs per package, `docs/architecture.md`, `CHANGELOG.md`, `CLAUDE.md`, scrub. Then, after Colin's answers: BSD-3-Clause license (Copyright (c) 2026, Colin Acton) and public visibility. | plm_bridge `fbdd07b`, `c1a2d64`, and the commits below |
 | Stretch | `RecordRun` service. Read-only investigation of 3DX attributes and Document links. Live result upload on a synthetic run. | plm_bridge `12e99ea`, `51f05d1` |
+| Merge | `plm-bridge` merged into `main` in ViewpointGeneration and inspection-docker | VG `3ffc150`, inspection-docker `10bab66` |
 | Colin's answers | VG re-selection fixed. Document-to-item write routes tested live (none works). inspection-docker moved onto Colin's reorganised layout, with a `.gitignore` fix. Parameters renamed `core.*`. All test Documents deleted. BSD-3-Clause; repository public. Final live smoke S1–S6 pass. | VG `afc94f9`; inspection-docker `b46ae16`/`d59ba93`; plm_bridge `0aaecba`, `6ff3ae4`, and the final commits |
 
 Tests at the end:
@@ -354,11 +355,14 @@ is `tools/dx3_delete_test_documents.py`.
   relationship writes fail (section 6). Searching for plans by title
   (`documents/search`, filtered to the exact `PLAN_<part>_<rev>_` prefix)
   would work without a relationship. It is not built (QUESTIONS.md).
-- **Merging the branches.** ViewpointGeneration `plm-bridge` into `main`;
-  inspection-docker `plm-bridge` into `feature-3dx-integration`. The
-  inspection-docker branch already contains Colin's reorganisation, so his
-  identical uncommitted copy must be discarded (or stashed) before merging.
-  `docs/onshape_integration/` stays his to commit.
+- **Merged into `main`** (2026-10-30, at Colin's request): ViewpointGeneration
+  `main` = `3ffc150`, inspection-docker `main` = `10bab66`. Both are
+  `--no-ff` merges of the `plm-bridge` branches, and each tree is identical
+  to its branch. Each brings in the `feature-3dx-integration` history.
+  Colin's local checkouts (with uncommitted work) were not touched. His
+  ViewpointGeneration edits rebased onto the new `main` are in
+  `/home/macs/plm_bridge_work/colin_vg_edits_on_new_main.patch`: the
+  README and `bringup.launch.py` conflicts are resolved by keeping both sides.
 - **Untested live:** Issue creation and the JMS listener remain so.
   Inspection_Control does not call `RecordRun` yet.
 - **Tenant identifiers already public.** inspection-docker's history on
