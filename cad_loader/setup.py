@@ -21,5 +21,5 @@ setup(
     maintainer='Colin Acton',
     maintainer_email='actonc@uw.edu',
     description='STEP and mesh loading with B-rep topology for inspection planning.',
-    license='TODO',
+    license='BSD-3-Clause',
 )

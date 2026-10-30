@@ -1,8 +1,10 @@
 # plm_bridge extraction: report
 
 **Status: finished** (2026-10-30), with Phase 3 deferred at Colin's request.
-Everything is pushed to GitHub. Nothing secret was pushed (see the "Secrets"
-section at the end). Open questions are in [`QUESTIONS.md`](QUESTIONS.md).
+Everything is pushed to GitHub. The repository is public under BSD-3-Clause.
+Nothing secret was pushed (see the "Secrets" section at the end).
+[`QUESTIONS.md`](QUESTIONS.md) records Colin's answers to the open questions
+and what was done with each.
 
 How to read the verification claims:
 - **Verified live:** the behaviour was observed against the UW 3DEXPERIENCE
@@ -24,8 +26,9 @@ Phases 0, 1, 2, 4 and 5 and both stretch items were.
 | 2. Backend abstraction | `PLMBackend` protocol, registry, fake backend. dx3 backend (`DXClient` moved). Core rewritten against the protocol and imports only `backends.base`. Identity `(backend, part_id)` with opaque `change_token`. `storage_key` cache layout with legacy resolution. Migration step 2. Interfaces in the Section 4.6 shapes. Plan schema 3.0. Capability fallbacks. Contract tests over the fake and over dx3 replaying sanitized recorded HTTP. | VG `52ae8b6` |
 | 3. Local and Onshape backends | **Deferred** (Colin, 2026-10-30) | none |
 | 4. Extract | Four packages in this repository with fresh history. ViewpointGeneration depends only on `plm_interfaces` and `cad_loader`. inspection-docker wired in. 3DX docs moved here, scrubbed. Clean `colcon build`. Tests pass, including in a plain Python 3.12 virtualenv with no ROS. Live smoke S1–S6 on the extracted packages. | plm_bridge `fbdd07b`, VG `b23e871`, inspection-docker `2f4efa8` |
-| 5. Docs and release prep | READMEs per package, `docs/architecture.md`, `CHANGELOG.md`, `CLAUDE.md`, license placeholder, scrub. Private. | plm_bridge `fbdd07b`, `c1a2d64`, this commit |
+| 5. Docs and release prep | READMEs per package, `docs/architecture.md`, `CHANGELOG.md`, `CLAUDE.md`, scrub. Then, after Colin's answers: BSD-3-Clause license (Copyright (c) 2026, Colin Acton) and public visibility. | plm_bridge `fbdd07b`, `c1a2d64`, and the commits below |
 | Stretch | `RecordRun` service. Read-only investigation of 3DX attributes and Document links. Live result upload on a synthetic run. | plm_bridge `12e99ea`, `51f05d1` |
+| Colin's answers | VG re-selection fixed. Document-to-item write routes tested live (none works). inspection-docker moved onto Colin's reorganised layout, with a `.gitignore` fix. Parameters renamed `core.*`. All test Documents deleted. BSD-3-Clause; repository public. Final live smoke S1–S6 pass. | VG `afc94f9`; inspection-docker `b46ae16`/`d59ba93`; plm_bridge `0aaecba`, `6ff3ae4`, and the final commits |
 
 Tests at the end:
 
@@ -44,10 +47,10 @@ this work (about 1,800 and 1,100 findings) and were deselected throughout.
 
 | Thing | Value |
 |---|---|
-| Repository | <https://github.com/cacton77/plm_bridge> (private; created with `gh`, Option A), branch `main` |
+| Repository | <https://github.com/cacton77/plm_bridge> (created private with `gh`, Option A; made public on 2026-10-30 at Colin's request), branch `main` |
 | Packages | `cad_loader`, `plm_interfaces`, `plm_bridge`, `plm_bridge_ros` (node `plm_bridge`, executable `plm_bridge_node`, launch `plm_bridge.launch.py`, CLI `plm-bridge`) |
 | ViewpointGeneration | branch `plm-bridge` (from `feature-3dx-integration` @ `53c0ba1`); Phase 4 commit `b23e871`, plus status-file commits |
-| inspection-docker | branch `plm-bridge` (from `feature-3dx-integration` @ `68bfdbd`); commit `2f4efa8` |
+| inspection-docker | branch `plm-bridge` (from `feature-3dx-integration` @ `68bfdbd`). `2f4efa8` (Phase 4 on the old layout); `b46ae16` (Colin's reorganisation, copied from his working tree); `d59ba93` (plm_bridge on the new layout, `.gitignore` fix) |
 | Local clone of the new repository | `inspection-docker/ros2_ws/src/plm_bridge` (`ros2_ws/src` exists on this machine) |
 | Git worktrees | ViewpointGeneration `plm-bridge`: `/home/macs/plm_bridge_work/ws/src/ViewpointGeneration`; inspection-docker `plm-bridge`: `/home/macs/plm_bridge_work/inspection-docker` |
 | Test workspace | `/home/macs/plm_bridge_work/ws`, built in throwaway `inspection-docker:jazzy` containers. It never mounted Colin's `ros2_ws` or his real `catalog/`; smoke runs used copies of the real catalog. |
@@ -125,10 +128,17 @@ added refs under each repository's `.git`.
 8. **`mesh_utils`** in ViewpointGeneration re-exports
    `cad_loader.mesh_io.read_mesh_file`/`mesh_file_units`, so its callers
    are unchanged.
-9. **inspection-docker** changes were made on the *committed* layout
-   (`src/shared.repos`, root `docker-compose.yaml`), not on Colin's
-   uncommitted reorganisation, so merging will need care. `ONSHAPE_*` and
-   `LOCAL_PARTS_DIR` were not added (scope).
+9. **inspection-docker.** Phase 4 edited the committed layout. Afterwards,
+   at Colin's request, his uncommitted reorganisation was copied into the
+   `plm-bridge` branch as its own commit and the edits redone on top
+   (`ros2_ws/src/shared.repos`, `docker/docker-compose.yaml`). The copy
+   leaves out three things:
+   - his untracked `docs/onshape_integration/`;
+   - two runtime files;
+   - the `.env.example` tenant values, kept as placeholders.
+
+   His two path edits to the 3DX docs were applied to the copies here.
+   `ONSHAPE_*` and `LOCAL_PARTS_DIR` were not added (scope).
 10. **Smoke harness limits** (`/home/macs/plm_bridge_work/tools/smoke.py`):
     - Without the cell there is no MoveIt, so `ordered` plans come from a stub
       traversal service that writes through VG's own `plan_io.write_plan` with
@@ -150,7 +160,7 @@ added refs under each repository's `.git`.
 | Attributes (material, finish) | not available on this system (probed 2026-10-30) | not implemented | not implemented |
 | Thumbnails (per-object preview) | not available on this system; local rendering from STEP verified live | not implemented | not implemented |
 | Attach plan (Document + FCS) | verified live 2026-10-30 (5 uploads, plus a download round trip) | not implemented | not implemented |
-| Link plan to part | not available on this system (relationship routes 404; read route `documents/parentId` exists, write not tried) | not implemented | not implemented |
+| Link plan to part | not available on this system (write routes tested live 2026-10-30: 405 and 500; see section 6) | not implemented | not implemented |
 | Result upload | verified live 2026-10-30 (synthetic run, 2 files on one Document) | not implemented | not implemented |
 | Issues (`dsiss:Issue`) | implemented, untested live (offline only; creating Issues is outside what test runs may do) | not implemented | not implemented |
 | Events (JMS via EIF) | implemented, untested (no broker) | not implemented | not implemented |
@@ -162,37 +172,40 @@ tests only.
 
 Run on 2026-10-30, each time on a fresh copy of the cell's real `catalog.db`.
 
-| Check | Phase 0 (baseline) | Phase 1 | Phase 2 | Phase 4 (extracted) |
-|---|---|---|---|---|
-| S1 full sync, then all unchanged | pass | pass | pass | pass |
-| S2 picker lists parts with local thumbnails | pass | pass | pass | pass |
-| S3 STEP downloaded and loaded with B-rep faces | pass | pass | pass (new layout) | pass |
-| S4 one row per stage; `ordered` auto-uploads as `TEST_PLM_BRIDGE_` | pass | pass | pass | pass |
-| S5 re-select loads CURRENT; a different token gives STALE and no load | pass* | pass | pass | pass |
-| S6 network disconnected: cached part plans and records locally | pass | pass | pass | pass |
-| X1 picker "Scan for files" adopts through the producer | n/a | pass | pass | pass |
-| X2 `list_backends` reports dx3 and its capabilities | n/a | n/a | pass | pass |
+| Check | Phase 0 (baseline) | Phase 1 | Phase 2 | Phase 4 (extracted) | Final |
+|---|---|---|---|---|---|
+| S1 full sync, then all unchanged | pass | pass | pass | pass | pass |
+| S2 picker lists parts with local thumbnails | pass | pass | pass | pass | pass |
+| S3 STEP downloaded and loaded with B-rep faces | pass | pass | pass (new layout) | pass | pass |
+| S4 one row per stage; `ordered` auto-uploads as `TEST_PLM_BRIDGE_` | pass | pass | pass | pass | pass |
+| S5 re-select loads CURRENT; a different token gives STALE and no load | pass* | pass* | pass* | pass* | pass |
+| S6 network disconnected: cached part plans and records locally | pass | pass | pass | pass | pass |
+| X1 picker "Scan for files" adopts through the producer | n/a | pass | pass | pass | pass |
+| X2 `list_backends` reports dx3 and its capabilities | n/a | n/a | pass | pass | pass |
 
-\* Evaluated from the log. The harness's first version also expected VG's
-"earlier CAD revision" warning, which a pre-existing VG quirk suppresses on
-re-selection (see section 10).
+\* Through Phase 4, S5 was judged without VG's "earlier CAD revision"
+warning, which a pre-existing VG quirk suppressed on re-selection. The quirk
+is fixed (VG `afc94f9`). The final run applies the strict check: no "Failed
+to load selected model" on re-selection, and the STALE warning is logged.
 
 ## 6. Answers
 
 1. **Is there now a working route on 3DX to relate an uploaded Document to
-   its engineering item? Not verified, but there is a strong candidate.**
-   - `dseng:EngItem/{id}/dseng:SpecificationDocument` and
-     `documents/{id}/relateddata` still answer `404 "URI not Found."`
-     (2026-10-30).
-   - New: the 3DSpace Documents API's `GET documents/parentId/{engItemId}`
-     (`parentRelName=SpecificationDocument` or `Reference Document`, either
-     direction) answers 200 with a validated, empty list. A nonexistent
-     parent gets `400 "Invalid Business Object Specified."`, so the route
-     exists.
-   - Its write counterpart, `POST documents/parentId/{id}`, would create a
-     Document attached to the item. I did not try it, because it modifies a
-     real engineering item. It is QUESTIONS.md item 2. The derived-output
-     workaround was not adopted.
+   its engineering item? No.** Tested live on 2026-10-30, with Colin's
+   approval, against the "Test" part:
+   - `POST documents/parentId/{engItemId}` answers `405 Method Not Allowed`.
+   - `POST documents?parentId=…&parentRelName=…&parentDirection=from` answers
+     `500 "An unexpected error has occurred"` for `Reference Document`,
+     `SpecificationDocument` and `PLMDocConnection`. Listing and search both
+     confirm nothing was created.
+   - `GET documents/parentId/{id}` exists and validates its parent, but it
+     only reads.
+   - The older routes (`dseng:…/dseng:SpecificationDocument`,
+     `documents/{id}/relateddata`) still 404.
+
+   Untried: the derived-output workaround (not approved). Also untried:
+   finding plans by title through `documents/search`, which works and needs
+   no relationship (QUESTIONS.md).
 2. **Can engineering attributes (material, finish, specification) be read on
    the UW tenant? No, not for the parts in scope.**
    - `dsmveng:EngItemMask.Details` works but returns no
@@ -259,31 +272,37 @@ re-selection (see section 10).
 
 ## 8. Tenant objects created
 
-All Documents on the UW 3DX tenant, all titled `TEST_PLM_BRIDGE_…`. None was
-related to an engineering item, no Issue was created, and nothing was
-deleted. Delete them when convenient. The two August test Documents listed in
-`docs/backends/dx3.md` predate this work.
+These are all Documents on the UW 3DX tenant. None was related to an
+engineering item, and no Issue was created. The link tests (section 6)
+created nothing.
 
-| When (UTC) | ID | Title | By |
-|---|---|---|---|
-| 2026-10-30T21:36:56Z | `F74C7BC56D720F006AE50DF600026546` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 0 smoke S4 |
-| 2026-10-30T21:39:58Z | `9B76B1F917A924006AE50EAB00023334` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 1 smoke S4 |
-| 2026-10-30T22:00:40Z | `F74C7BC56D720F006AE5138700026864` | `TEST_PLM_BRIDGE_CONTRACT_PLAN` | contract fixture recording |
-| 2026-10-30T22:08:17Z | `9B76B1F917A924006AE51550000237A2` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 2 smoke S4 |
-| 2026-10-30T22:17:59Z | `F74C7BC56D720F006AE5179500026A90` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 4 smoke S4 |
-| 2026-10-30T22:32Z | `F74C7BC56D720F006AE51AFE00026CFE` | `TEST_PLM_BRIDGE_RESULT_<part number of "Test">_A.1_run_synthetic_plm_bridge` | live result upload (synthetic run) |
+**Every one of them was deleted on 2026-10-30, at Colin's request, after its
+findings were recorded here and in `docs/backends/dx3.md`.** Each was
+confirmed gone by reading it back, which answers
+`400 "Invalid Business Object Specified."`.
 
-The part number (which embeds the tenant id) is elided from the titles here.
-This table is the scrub's one intentional exception: the object ids are kept
-so the objects can be found and deleted.
+| Created (UTC) | Title | By |
+|---|---|---|
+| 21:36:56 | `TEST_PLM_BRIDGE_PLAN_<part>_A.1_ORDERED` | Phase 0 smoke S4 |
+| 21:39:58 | `TEST_PLM_BRIDGE_PLAN_<part>_A.1_ORDERED` | Phase 1 smoke S4 |
+| 22:00:40 | `TEST_PLM_BRIDGE_CONTRACT_PLAN` | contract fixture recording |
+| 22:08:17 | `TEST_PLM_BRIDGE_PLAN_<part>_A.1_ORDERED` | Phase 2 smoke S4 |
+| 22:17:59 | `TEST_PLM_BRIDGE_PLAN_<part>_A.1_ORDERED` | Phase 4 smoke S4 |
+| 22:32:32 | `TEST_PLM_BRIDGE_RESULT_<part>_A.1_run_synthetic_plm_bridge` | live result upload (synthetic run) |
+| 23:07:45 | `TEST_PLM_BRIDGE_PLAN_<part>_A.1_ORDERED` | final smoke S4 |
+
+The two August test Documents named in `docs/backends/dx3.md` (titled
+`PLAN_<part>_A.1`, created 2026-08-12) were deleted at the same time. The
+cell's real uploaded plan from 2026-08-26 was not touched. The cleanup tool
+is `tools/dx3_delete_test_documents.py`.
 
 ## 9. Breaking changes for the cell
 
 - **Workspace.** ViewpointGeneration `plm-bridge` needs this repository in the
   same colcon workspace (it depends on `plm_interfaces` and `cad_loader`).
-  inspection-docker's `shared.repos` adds it. Because the repository is
-  private, `vcs import` needs GitHub credentials. Without `plm_bridge_ros`,
-  bringup logs a message and runs without the catalog.
+  inspection-docker's `ros2_ws/src/shared.repos` adds it, and since the
+  repository is public, `vcs import` needs no credentials. Without
+  `plm_bridge_ros`, bringup logs a message and runs without the catalog.
 - **Interfaces** (now in `plm_interfaces`). Field renames:
   - `eng_item_id` becomes `backend` + `part_id`;
   - `cestamp` becomes `change_token`;
@@ -295,12 +314,16 @@ so the objects can be found and deleted.
   `UploadPlan` takes a `plan_id`. `SyncNow` returns `SyncResult[]`. New:
   `ListBackends`, `DescribePlans`, `RecordRun`. Topic and service names are
   unchanged (`/catalog/...`), but the node is now `/plm_bridge`.
-- **Parameters.** `catalog.bookmark_scope`, `use_bookmark_scope`,
-  `collab_space_filter`, `page_size`, `max_items` and `fetch_thumbnails`
-  became `dx3.*`. New parameters: `catalog.backends`, `title_prefix`,
-  `picker_enabled`, `picker_port`, `namespace`, `describe_plans_service`.
-  The bringup launch argument `plm_backends` is new; the old arguments still
-  work.
+- **Parameters.**
+  - Core settings are `core.*` (they were `catalog.*`): `core.sync_interval`,
+    `core.mesh_units`, `core.auto_upload_plan_stages`, and so on.
+  - `catalog.bookmark_scope`, `use_bookmark_scope`, `collab_space_filter`,
+    `page_size`, `max_items` and `fetch_thumbnails` became `dx3.*`.
+  - New: `core.backends`, `core.title_prefix`, `core.picker_enabled`,
+    `core.picker_port`, `core.namespace`, `core.describe_plans_service`.
+
+  Launch arguments are unchanged, and the bringup argument `plm_backends` is
+  new. The service and topic namespace is still `catalog`.
 - **Environment.** Existing `DX_*` and `CATALOG_*` names are unchanged. New:
   `PLM_BACKENDS` (default `dx3`), `CATALOG_TITLE_PREFIX`,
   `DX_DOCUMENT_LINKS`, `PLAN_DESCRIBE_CMD`, `CATALOG_MATURITY_FILTER` (which
@@ -324,28 +347,24 @@ so the objects can be found and deleted.
 - **Inspection_Control follow-up (not implemented).** The TSDF pose node
   could load parts through `cad_loader` and learn the selected part from
   `PartSelected`, instead of its own model loading.
-- **License.** `LICENSE` is a placeholder; a license has to be chosen before
-  any release.
 - **Phase 3 is deferred.** The Onshape backend is to be ported from Colin's
   spike, with blob-element plans and a mass-property change token. A local
   (directory) backend is also missing.
-- **Document-to-item linking.** Test `POST documents/parentId/{id}` with
-  approval (QUESTIONS.md item 2). If it works, `list_related_documents()`
-  should use `GET documents/parentId` and dx3 can declare `link_attachment`.
-- **Pre-existing VG quirk (not fixed).** Re-selecting the part that is
-  already loaded logs "Failed to load selected model" and skips the
-  STALE/SELECTED warnings (QUESTIONS.md item 1).
-- **Merging inspection-docker.** The `plm-bridge` branch edits files Colin's
-  uncommitted reorganisation moves or edits (`.env.example`,
-  `docker-compose.yaml`, `src/shared.repos`, two `docs/3dx_integration`
-  files).
+- **Cross-cell plan discovery on 3DX** needs another route, because the
+  relationship writes fail (section 6). Searching for plans by title
+  (`documents/search`, filtered to the exact `PLAN_<part>_<rev>_` prefix)
+  would work without a relationship. It is not built (QUESTIONS.md).
+- **Merging the branches.** ViewpointGeneration `plm-bridge` into `main`;
+  inspection-docker `plm-bridge` into `feature-3dx-integration`. The
+  inspection-docker branch already contains Colin's reorganisation, so his
+  identical uncommitted copy must be discarded (or stashed) before merging.
+  `docs/onshape_integration/` stays his to commit.
 - **Untested live:** Issue creation and the JMS listener remain so.
   Inspection_Control does not call `RecordRun` yet.
 - **Tenant identifiers already public.** inspection-docker's history on
   `main` and `feature-3dx-integration` contains the tenant id, hostnames, and
-  the organization and collaborative-space names (`.env.example` and the
-  3DX docs). The `plm-bridge` branch tip removes them, but history keeps
-  them.
+  the organization and collaborative-space names. Colin decided to leave
+  that history as it is; the branch tips no longer contain them.
 - **ament lint.** ViewpointGeneration's ament flake8/pep257 tests fail
   throughout, as before this work. The new packages are flake8-clean apart
   from `step_loader.py` and the dx3 client and JMS modules, which were moved
@@ -353,6 +372,11 @@ so the objects can be found and deleted.
 - **Picker plan chips** show the producer's full summary
   ("8 regions, 65 clusters, 65 viewpoints") instead of "8r · 65c · 65v",
   and may be wider.
+- **Regression caught and fixed.** The parameter rename (`0aaecba`) also
+  rewrote `self.catalog.backends` in the node, so the node could not start.
+  The final smoke run caught it before anything else used the code. It was
+  fixed in `6ff3ae4`, and `plm_bridge_ros/test/test_node.py` now constructs
+  the node.
 
 ## Secrets
 
@@ -365,6 +389,10 @@ so the objects can be found and deleted.
   first and last names, which were removed before the first commit.
 - The only scan warnings were Colin's own name as package maintainer, as
   license holder, in `cacton77` URLs, and in the status file.
+- Before the repository was made public, its whole history was scanned for
+  every identifier above. The only finds were Colin's name and the object
+  ids of the test Documents in earlier versions of this report; those
+  Documents have since been deleted.
 - In one push (VG `307a7a7`) the scan's exit status was masked by a pipe.
   Its only finding was that name. The pushes after it used a script that
   stops on any finding.

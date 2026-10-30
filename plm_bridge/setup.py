@@ -26,7 +26,7 @@ setup(
     maintainer='Colin Acton',
     maintainer_email='actonc@uw.edu',
     description='Local parts catalog over PLM systems, with plan and result upload.',
-    license='TODO',
+    license='BSD-3-Clause',
     entry_points={
         'console_scripts': [
             'plm-bridge = plm_bridge.cli:main',

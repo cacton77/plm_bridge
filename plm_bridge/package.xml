@@ -5,7 +5,7 @@
   <version>0.1.0</version>
   <description>Local parts catalog over PLM systems (3DEXPERIENCE first): sync, STEP cache, plan and result upload, browser part picker. No ROS imports.</description>
   <maintainer email="actonc@uw.edu">Colin Acton</maintainer>
-  <license>TODO: license to be confirmed</license>
+  <license>BSD-3-Clause</license>
 
   <exec_depend>cad_loader</exec_depend>
   <exec_depend>python3-requests</exec_depend>

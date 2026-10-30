@@ -19,7 +19,7 @@ setup(
     maintainer='Colin Acton',
     maintainer_email='actonc@uw.edu',
     description='ROS 2 node and launch file for plm_bridge.',
-    license='TODO',
+    license='BSD-3-Clause',
     entry_points={
         'console_scripts': [
             'plm_bridge_node = plm_bridge_ros.node:main',

@@ -5,7 +5,7 @@
   <version>0.1.0</version>
   <description>ROS 2 node and launch file for plm_bridge: catalog services, part selection, the picker.</description>
   <maintainer email="actonc@uw.edu">Colin Acton</maintainer>
-  <license>TODO: license to be confirmed</license>
+  <license>BSD-3-Clause</license>
 
   <exec_depend>rclpy</exec_depend>
   <exec_depend>rcl_interfaces</exec_depend>

@@ -69,16 +69,35 @@ except four `TEST_PLM_BRIDGE_*` Documents):
     exposed is a modelling question (enterprise attributes, or SolidWorks
     properties mapped on save), not an API gap the client can work around.
     (`tools/dx3_probe_attributes.py`)
-- **A Document-to-item route exists for reading.**
-  `GET documents/parentId/{engItemId}?parentRelName=SpecificationDocument&parentDirection=from`
-  (also `Reference Document`, either direction) answers 200 with an empty,
-  validated list. A nonexistent parent answers
-  `400 "Invalid Business Object Specified."`, so the route is real, not a
-  catch-all. Its counterpart in the same 3DSpace Documents API,
-  `POST documents/parentId/{id}`, would create a Document attached to the
-  item. That write was **not** tried: it modifies a real engineering item,
-  which test runs may not do (see QUESTIONS.md).
+- **No Document-to-item write route works through the Documents API**
+  (tested live with Colin's approval, 2026-10-30, against the "Test" part):
+  - `GET documents/parentId/{engItemId}?parentRelName=…&parentDirection=…`
+    exists and validates its parent. For `SpecificationDocument`,
+    `Reference Document` and `PLMDocConnection`, in either direction, it
+    returns 200 with an empty list; a nonexistent parent gets
+    `400 "Invalid Business Object Specified."`.
+  - `POST documents/parentId/{engItemId}` answers `405 Method Not Allowed`:
+    the route is read-only.
+  - `POST documents?parentId={engItemId}&parentRelName=…&parentDirection=from`
+    answers `500 "An unexpected error has occurred"` for
+    `Reference Document`, `SpecificationDocument` and `PLMDocConnection`.
+    No Document was created (checked by listing and by search).
+  - `dseng:…/dseng:SpecificationDocument` and `documents/{id}/relateddata`
+    still answer 404.
+
+  So dx3 does not declare `link_attachment`, and cross-cell plan discovery
+  stays unavailable. Two routes remain untried: attaching plans as derived
+  outputs (not approved: it writes into the converter-managed collection),
+  and finding plans by title through `documents/search` (below), which needs
+  no relationship.
   (`tools/dx3_probe_document_parent.py`)
+- **Documents can be found by title**: `GET documents/search?searchStr=…`
+  works. It is fuzzy (a prefix search also returns unrelated documents), so
+  filter titles client-side. The cleanup tool uses it.
+- **Documents can be deleted**: `DELETE documents/{id}` answers 200, and the
+  Document then reads back as `400 "Invalid Business Object Specified."`.
+  `tools/dx3_delete_test_documents.py` removes `TEST_PLM_BRIDGE_*` Documents
+  left by test runs. The catalog itself never deletes anything.
 - **Expired or wrong credentials** look the same as before: the passport
   re-renders its form with status 200 and no CASTGC cookie. The cell's own
   sync log showed this failure continuously from 2026-10-15 until the
@@ -470,8 +489,9 @@ terminal `ordered` stage is uploaded by default — see
 `auto_upload_plan_stages`. Every generated plan is recorded in the local
 catalog regardless of whether it is uploaded.
 
-Two test documents were created on the tenant during this work and are **not
-linked to any engineering item**; delete them if unwanted:
+Two test documents were created on the tenant during this work, **not
+linked to any engineering item** (both deleted on 2026-10-30, after the
+results above were recorded):
 
 - `00000000000000000000000000000001` — carries a throwaway `plan.json`
 - `00000000000000000000000000000002` — carries a real plan envelope

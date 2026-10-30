@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.1.0 (unreleased, 2026-10-30)
+## 0.1.0 (2026-10-30)
+
+Licensed BSD-3-Clause; the repository is public.
 
 The parts catalog that lived in ViewpointGeneration (`viewpoint_generation.catalog`,
 `viewpoint_generation.picker`, `step_loader`) extracted into its own

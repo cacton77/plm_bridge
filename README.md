@@ -28,7 +28,7 @@ ViewpointGeneration, which depends on `plm_interfaces` and `cad_loader`:
 
 ```bash
 cd ros2_ws/src
-git clone https://github.com/cacton77/plm_bridge.git     # private
+git clone https://github.com/cacton77/plm_bridge.git
 cd .. && colcon build
 ros2 launch viewpoint_generation bringup.launch.py catalog:=true picker:=true
 # or the bridge alone:
@@ -50,6 +50,6 @@ python -m pytest cad_loader/test plm_bridge/test
 
 ## Status
 
-Private, unreleased; the license is not chosen yet (see `LICENSE`). Work
-history and verification results are in [`REPORT.md`](REPORT.md); open
-questions are in [`QUESTIONS.md`](QUESTIONS.md).
+Released under the BSD 3-Clause license (see `LICENSE`). Work history and
+verification results are in [`REPORT.md`](REPORT.md); open questions are in
+[`QUESTIONS.md`](QUESTIONS.md).

@@ -1,58 +1,30 @@
 # Questions for Colin
 
-I worked unattended, so every question below was settled by a safe default
-for now. The default is stated with each one. Most important first.
+## Answered (2026-10-30)
 
-1. **Re-selecting the part that is already loaded (ViewpointGeneration).**
-   `_part_selected_cb` in `viewpoint_generation_node.py` treats
-   `set_mesh_file()`'s "Mesh file and units already set." as a load failure.
-   It then logs "Failed to load selected model" and skips both
-   `_apply_plm_context()` and the STALE/SELECTED warnings. Plan loading is
-   still correct, because the plan is loaded before the mesh. This predates
-   the extraction. Should "already set" count as success? It's about a
-   three-line change.
-   *Default: not changed.*
+| # | Question | Answer | What was done |
+|---|---|---|---|
+| 1 | Should re-selecting the loaded part count as success? | Yes | Fixed in ViewpointGeneration `afc94f9`. The final smoke run checks it strictly. |
+| 2 | Test `POST documents/parentId` on the tenant? | Go ahead | Tested live. No route works: 405 on the parentId POST, and 500 on creating with parent parameters (three relationship types). Nothing was created. See REPORT.md section 6. |
+| 3 | How to merge the inspection-docker branch? | The repo was reorganised into a `ros2_ws/` workspace; fix what wasn't updated | Copied your reorganisation into `plm-bridge` as its own commit (`b46ae16`), redid the plm_bridge edits on top, and ignored everything under `ros2_ws/` except the manifest (`d59ba93`). Two runtime files were left untracked and unignored. |
+| 4 | License? | BSD, and make the repo public | BSD-3-Clause, Copyright (c) 2026 Colin Acton. Public after a full-history scan. |
+| 5 | Rewrite public history that holds tenant identifiers? | Default | Not rewritten. |
+| 6 | Delete the test Documents? | Yes, once findings are preserved | All 7 `TEST_PLM_BRIDGE_*` Documents and the 2 August ones deleted, each confirmed gone. |
+| 7 | Onshape design choices for Phase 3? | Default | Deferred. |
+| 8 | Rename the core parameter prefix? | Rename | `catalog.*` became `core.*` (`0aaecba`, fixed in `6ff3ae4`). The topic and service namespace is still `catalog`. |
 
-2. **May I test `POST documents/parentId/{engItemId}` on the tenant?**
-   `GET documents/parentId/{id}?parentRelName=SpecificationDocument&parentDirection=from`
-   exists and validates its parent (`docs/backends/dx3.md`), so its POST
-   counterpart may be the Document-to-item link the integration has been
-   missing. Testing it creates one `TEST_PLM_BRIDGE_` Document **attached to
-   a real engineering item** (for example "Test"), which falls outside the
-   test-run rules. If it works, `list_related_documents()` should use the GET
-   route, and dx3 can declare `link_attachment` (cross-cell plan discovery).
-   *Default: not tried.*
+## Open
 
-3. **Merging the inspection-docker `plm-bridge` branch.** It edits the
-   committed layout (`src/shared.repos`, root `docker-compose.yaml`,
-   `.env.example`, `docs/3dx_integration/`). Your uncommitted working copy
-   moves those to `ros2_ws/src/` and `docker/`, and also edits two of the
-   moved docs. Do you want the branch rebased onto your reorganisation once
-   it's committed, or will you carry the five small edits across yourself?
-   *Default: left on the old layout.*
-
-4. **License.** `LICENSE` is a placeholder; which license should it be?
-   *Default: none (private, all rights reserved).*
-
-5. **Tenant identifiers already in public history.** inspection-docker's
-   `main` and `feature-3dx-integration` already publish the tenant id,
-   hostnames, organization and collaborative-space name (`.env.example`, the
-   3DX docs). The `plm-bridge` branch removes them from the tip only.
-   Rewriting public history is your call.
-   *Default: not rewritten.*
-
-6. **Test Documents on the tenant.** Six `TEST_PLM_BRIDGE_*` Documents were
-   created (ids in REPORT.md section 8), and two from August are listed in
-   `docs/backends/dx3.md`. I didn't delete anything. Delete them, or keep the
-   contract-recording one (`TEST_PLM_BRIDGE_CONTRACT_PLAN`) for re-recording?
-   *Default: kept.*
-
-7. **Onshape (Phase 3).** When it's time, should the backend port the spike's
-   mass-property fingerprint as the change token, and blob elements in the
-   part's document for plans? Those are the spike's findings, with blob
-   round-trips still open. *Default: deferred.*
-
-8. **Parameter prefix.** The node is now `plm_bridge`, but its core
-   parameters kept the `catalog.` prefix, so nothing that sets them breaks.
-   Rename them to `plm_bridge.`/`core.` now, or later together with the
-   `catalog` topic namespace? *Default: unchanged.*
+1. **Cross-cell plan discovery on 3DX without a relationship.** Uploaded plans
+   are titled `PLAN_<part number>_<revision>_<STAGE>`, and
+   `documents/search?searchStr=` works (fuzzy, so titles would be filtered
+   to the exact prefix). Should dx3's `list_attachments` find plans that way
+   and declare `link_attachment`? Then a second cell could download a plan
+   another cell uploaded for the same revision. The risks: titles are not
+   identity, so another uploader's same-titled document would match; and
+   every `ensure_plan` that misses locally costs one search call.
+   *Default: not built.*
+2. **Merging.** When you merge inspection-docker `plm-bridge`, first discard
+   (or stash) your uncommitted copy of the reorganisation, since the branch
+   already has it. Your `docs/onshape_integration/` is not on the branch;
+   commit it yourself if you want it there.
