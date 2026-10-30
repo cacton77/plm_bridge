@@ -14,7 +14,7 @@ the change crosses packages.
 
 - Config dataclasses expose `to_dict()` returning
   `{field: {value, type, description, control, range}}`, and the ROS node
-  declares a parameter for every field (`catalog.<field>` for `CoreConfig`,
+  declares a parameter for every field (`core.<field>` for `CoreConfig`,
   `<backend>.<field>` for a backend's settings). Adding a field to the
   dataclass and its `to_dict()` must remain sufficient.
 - Secret-bearing config (`DXConfig`, and every backend's credential config)

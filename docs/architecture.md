@@ -112,7 +112,7 @@ upload.
 ## ROS interface (`plm_interfaces`)
 
 The node is named `plm_bridge`. Its services and topics live under
-`catalog.namespace` (default `catalog`), so the names the cell has always
+`core.namespace` (default `catalog`), so the names the cell has always
 used are unchanged:
 
 - **Services:** `<ns>/list_backends`, `list_parts`, `select_part`,
@@ -121,7 +121,7 @@ used are unchanged:
   inspection run and its bundle (optionally uploading it) in one call.
 - **Topics:** `/<ns>/part_selected` (latched) and `/<ns>/sync_complete`
   (one message per backend per pass).
-- **Client:** `catalog.describe_plans_service` (the producer's
+- **Client:** `core.describe_plans_service` (the producer's
   `DescribePlans`).
 
 ## Data

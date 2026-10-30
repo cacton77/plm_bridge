@@ -43,8 +43,8 @@ repository and generalized over PLM backends.
   their `catalog` namespace, and the node is named `plm_bridge`.
 - **Plan files** are schema 3.0 (`plm_context` with `backend`, `part_id`,
   `change_token`). ViewpointGeneration still reads 2.0, 1.0 and bare results.
-- **Parameters.** dx3 settings moved from `catalog.<field>` to
-  `dx3.<field>`. The picker runs in the node (`catalog.picker_enabled`), and
+- **Parameters.** dx3 settings moved from `core.<field>` to
+  `dx3.<field>`. The picker runs in the node (`core.picker_enabled`), and
   the separate `picker_node` is gone.
 - **Database.** `catalog.db` migrates in place (steps 1 and 2) after a
   backup. Cached files are not moved, and the old layout is still read.

@@ -280,7 +280,7 @@ def main(args=None):
     """Standalone entry point (no ROS): browse, cache, and sync only.
 
     Inside the cell the catalog node serves the picker itself; see
-    `catalog.picker_enabled`.
+    `core.picker_enabled`.
     """
     parser = argparse.ArgumentParser(
         prog='plm_bridge.picker.app',

@@ -32,11 +32,11 @@ The container paths for the catalog are:
 
 ```bash
 # These are the paths INSIDE the container (not on the host)
-CATALOG_DB_PATH=/workspaces/shared_ws/catalog/catalog.db
-CATALOG_STEP_DIR=/workspaces/shared_ws/catalog/steps
-CATALOG_THUMB_DIR=/workspaces/shared_ws/catalog/thumbnails
-CATALOG_PLAN_DIR=/workspaces/shared_ws/catalog/plans
-CATALOG_RESULT_DIR=/workspaces/shared_ws/catalog/results
+CATALOG_DB_PATH=/catalog/catalog.db
+CATALOG_STEP_DIR=/catalog/steps
+CATALOG_THUMB_DIR=/catalog/thumbnails
+CATALOG_PLAN_DIR=/catalog/plans
+CATALOG_RESULT_DIR=/catalog/results
 ```
 
 **Finding your SecurityContext string:** This is the trickiest configuration
@@ -180,7 +180,7 @@ orchestration. You need to make two kinds of changes there:
 
 #### a. Add the catalog volume mount
 
-Edit `docker-compose.yaml` in `inspection-docker`. Add the catalog volume
+Edit `docker/docker-compose.yaml` in `inspection-docker`. Add the catalog volume
 to the `x-common-volumes` anchor:
 
 ```yaml
@@ -188,11 +188,11 @@ x-common-volumes: &common-volumes
   - /tmp/.X11-unix:/tmp/.X11-unix:rw
   - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
   - ./docker/entrypoint.sh:/entrypoint.sh:ro
-  - ./src:/workspaces/shared_ws/src:rw
+  - ./src:/workspaces/ros2_ws/src:rw
   - ./data:/data:rw
   - ./models:/models:rw
   - ./config:/config:rw
-  - ./catalog:/workspaces/shared_ws/catalog:rw    # ADD THIS
+  - ./catalog:/catalog:rw    # ADD THIS
   - /dev:/dev
   - /tmp/runtime-${USERNAME:-macs}:/tmp/runtime-${USERNAME:-macs}:rw
 ```

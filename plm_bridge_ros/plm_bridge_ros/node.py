@@ -1,7 +1,7 @@
 """The `plm_bridge` ROS 2 node: the PLM parts catalog for the inspection cell.
 
-One node hosts every configured backend (`catalog.backends`, from
-`PLM_BACKENDS`). Services and topics live under `catalog.namespace` (default
+One node hosts every configured backend (`core.backends`, from
+`PLM_BACKENDS`). Services and topics live under `core.namespace` (default
 `catalog`), so their names are unchanged from the single-backend catalog:
 
     <ns>/list_backends    -- hosted backends, capabilities, connection state
@@ -18,15 +18,15 @@ One node hosts every configured backend (`catalog.backends`, from
     /<ns>/sync_complete   -- SyncResult after every sync pass, per backend
 
 As a client it calls the plan producer's `DescribePlans` service, named by
-`catalog.describe_plans_service` (empty: none; ViewpointGeneration's is
+`core.describe_plans_service` (empty: none; ViewpointGeneration's is
 `viewpoint_generation/describe_plans`), when the picker's "Scan for files"
 finds plan files it never recorded.
 
-Parameters: every `CoreConfig` field as `catalog.<field>`, and every field of
+Parameters: every `CoreConfig` field as `core.<field>`, and every field of
 a backend's non-secret settings as `<backend>.<field>` (e.g.
 `dx3.bookmark_scope`). Credentials are never parameters.
 
-The browser part picker runs in this process when `catalog.picker_enabled`
+The browser part picker runs in this process when `core.picker_enabled`
 is true, sharing the node's catalog, sync lock and publisher through
 callbacks.
 
@@ -100,14 +100,14 @@ class PLMBridgeNode(rclpy.node.Node):
         # CoreConfig follows the repo's to_dict() convention, so its fields
         # become parameters automatically; adding a field is enough.
         self.config = CoreConfig.from_env()
-        self._declare_from(self.config, 'catalog')
-        self.declare_parameter('catalog.describe_plans_service', '')
+        self._declare_from(self.config, 'core')
+        self.declare_parameter('core.describe_plans_service', '')
 
         self.catalog, errors = build_catalog(self.config)
         for message in errors:
             self.get_logger().error(message)
         # Each backend's non-secret settings become <backend>.<field>.
-        for name, backend in self.catalog.backends.items():
+        for name, backend in self.core.backends.items():
             settings = getattr(backend, 'settings', None)
             if settings is not None and hasattr(settings, 'to_dict'):
                 self._declare_from(settings, name)
@@ -147,7 +147,7 @@ class PLMBridgeNode(rclpy.node.Node):
             PartSelected, f'/{ns}/part_selected', latched)
         self.sync_complete_pub = self.create_publisher(
             SyncResultMsg, f'/{ns}/sync_complete', 10)
-        describe_service = self.get_parameter('catalog.describe_plans_service').value
+        describe_service = self.get_parameter('core.describe_plans_service').value
         self.describe_plans_client = (
             self.create_client(DescribePlans, describe_service, callback_group=services)
             if describe_service else None)
@@ -174,7 +174,7 @@ class PLMBridgeNode(rclpy.node.Node):
         self.get_logger().info(
             f"Catalog node ready: {self.catalog.db.counts()['total']} parts in "
             f'{self.catalog.paths.db_path}; backends: '
-            f"{', '.join(sorted(self.catalog.backends)) or 'none'}")
+            f"{', '.join(sorted(self.core.backends)) or 'none'}")
 
     # --- parameters ---------------------------------------------------------------
 
@@ -190,14 +190,14 @@ class PLMBridgeNode(rclpy.node.Node):
         """Apply parameter changes to the live configuration."""
         for param in params:
             prefix, _, field = param.name.partition('.')
-            if prefix == 'catalog' and field in self.config.to_dict():
+            if prefix == 'core' and field in self.config.to_dict():
                 setattr(self.config, field, param.value)
                 if field in STARTUP_ONLY:
                     self.get_logger().warn(f'{param.name} takes effect at the next start.')
                 elif field == 'sync_interval':
                     self._restart_sync_timer()
-            elif prefix in self.catalog.backends:
-                settings = getattr(self.catalog.backends[prefix], 'settings', None)
+            elif prefix in self.core.backends:
+                settings = getattr(self.core.backends[prefix], 'settings', None)
                 if settings is not None and field in settings.to_dict():
                     setattr(settings, field, param.value)
             else:
@@ -231,14 +231,14 @@ class PLMBridgeNode(rclpy.node.Node):
     # --- helpers -------------------------------------------------------------------
 
     def _any_configured(self):
-        return any(b.is_configured()[0] for b in self.catalog.backends.values())
+        return any(b.is_configured()[0] for b in self.core.backends.values())
 
     def _backend_name(self, requested):
         """The backend a request means: as given, or the only one hosted."""
         if requested:
             return requested
-        if len(self.catalog.backends) == 1:
-            return next(iter(self.catalog.backends))
+        if len(self.core.backends) == 1:
+            return next(iter(self.core.backends))
         return ''
 
     # --- picker and plan producer ------------------------------------------------
@@ -298,7 +298,7 @@ class PLMBridgeNode(rclpy.node.Node):
             return 0, 0, 'No unrecorded plan files found.'
         if self.describe_plans_client is None:
             return 0, 0, ('Found unrecorded plan files, but no plan producer is configured '
-                          '(catalog.describe_plans_service) to describe them.')
+                          '(core.describe_plans_service) to describe them.')
         if not self.describe_plans_client.wait_for_service(timeout_sec=2.0):
             return 0, 0, ('Found unrecorded plan files, but the plan producer is not '
                           'running to describe them.')
@@ -386,7 +386,7 @@ class PLMBridgeNode(rclpy.node.Node):
         # services stay live meanwhile.
         if self._sync_thread is not None:
             self._sync_thread.join()
-        names = [backend] if backend else sorted(self.catalog.backends)
+        names = [backend] if backend else sorted(self.core.backends)
         results = [self.catalog.last_results[name] for name in names
                    if name in self.catalog.last_results
                    and self.catalog.last_results[name] is not before.get(name)]

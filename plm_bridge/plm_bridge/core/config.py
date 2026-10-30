@@ -2,7 +2,7 @@
 
 `CoreConfig` follows the repo's config-dataclass convention: `to_dict()`
 returns `{field: {value, type, description, control, range}}`, and the ROS
-node auto-declares every field as a `catalog.<field>` parameter, so adding a
+node auto-declares every field as a `core.<field>` parameter, so adding a
 field here is all a new setting needs. It holds no secrets: credentials
 belong to each backend's own configuration, which never has a `to_dict()`.
 

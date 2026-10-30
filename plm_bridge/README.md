@@ -61,7 +61,7 @@ inspection-docker).
 `CoreConfig` and each backend's settings follow the config-dataclass
 convention: `to_dict()` returns `{field: {value, type, description, control,
 range}}`, and the ROS node declares every field as a parameter
-(`catalog.<field>`, `<backend>.<field>`). Credential configuration
+(`core.<field>`, `<backend>.<field>`). Credential configuration
 (`DXConfig`) never has a `to_dict()`, is never a parameter, and is never
 written into a plan, result or log; log it with `redacted()`.
 

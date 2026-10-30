@@ -83,10 +83,10 @@ as the architectural spec — implement to match their contracts and naming.
 ```
 inspection-docker/                       # ← YOU ARE HERE (working directory)
 ├── docker/
+│   ├── docker-compose.yaml
 │   ├── Dockerfile.jazzy                 # Docker image definition
 │   ├── requirements.txt                 # Python deps installed at build time
 │   └── entrypoint.sh
-├── docker-compose.yaml
 ├── .env                                 # ROS config + 3DX credentials
 ├── install.sh / connect.sh
 ├── catalog/                             # NEW — host-mounted, gitignored
@@ -134,8 +134,8 @@ New interface definitions go in
 `src/ViewpointGeneration/viewpoint_generation_interfaces/srv/` and
 `src/ViewpointGeneration/viewpoint_generation_interfaces/msg/`.
 
-Docker infrastructure files (docker-compose.yaml, docker/requirements.txt,
-.env) are at the inspection-docker root — your working directory.
+Docker infrastructure files (docker/docker-compose.yaml, docker/requirements.txt,
+.env) live under the inspection-docker root — your working directory.
 
 The `catalog/` host directory is also at the inspection-docker root,
 alongside `data/`, `models/`, and `src/`.
@@ -147,7 +147,7 @@ Since you are running from the inspection-docker root, you can directly edit:
 
 - `docker/Dockerfile.jazzy` — Docker image definition
 - `docker/requirements.txt` — Python deps (pip-installed at build time)
-- `docker-compose.yaml` — container orchestration
+- `docker/docker-compose.yaml` — container orchestration
 - `.env` — environment variables
 
 The Dockerfile is built from `osrf/ros:jazzy-desktop-full` with
@@ -155,21 +155,21 @@ CUDA 12.8 + PyTorch 2.7. Host-mounted volumes use these container paths:
 
 | Host path (in inspection-docker) | Container path                    | Purpose                     |
 |----------------------------------|-----------------------------------|-----------------------------|
-| `./src`                          | `/workspaces/shared_ws/src`       | ROS 2 workspace source      |
+| `./src`                          | `/workspaces/ros2_ws/src`       | ROS 2 workspace source      |
 | `./data`                         | `/data`                           | Mesh files, point clouds    |
 | `./models`                       | `/models`                         | PartField checkpoint        |
-| `./catalog` (NEW)                | `/workspaces/shared_ws/catalog`   | SQLite DB, STEP cache, etc. |
+| `./catalog` (NEW)                | `/catalog`                        | SQLite DB, STEP cache, etc. |
 | `./config`                       | `/config`                         | DDS and RViz configs        |
 
 **Important:** The design documents reference paths like `/ws/catalog` and
 `/ws/data` — these are shorthand. The actual paths inside the container use
-the `/workspaces/shared_ws/` prefix for workspace-relative paths and `/data`
-for the data directory. When implementing, use the actual container paths.
+the `/workspaces/ros2_ws/` prefix for workspace-relative paths, `/data`
+for the data directory and `/catalog` for the catalog. When implementing, use the actual container paths.
 
-The working directory inside the container is `/workspaces/shared_ws`.
+The working directory inside the container is `/workspaces/ros2_ws`.
 
 The container runs as a non-root user (`ros_user`), uses `network_mode: host`,
-and the entrypoint sources ROS 2 → `base_ws` → `shared_ws` workspaces in order.
+and the entrypoint sources ROS 2 → `base_ws` → `ros2_ws` workspaces in order.
 
 ### Dependencies
 
@@ -387,7 +387,7 @@ thumbnails in a card grid. Clicking a card triggers the full SelectPart flow.
 - Plan status indicator on cards
 - Expandable detail panel on click
 - Search and maturity filter
-- Docker port exposure (5050) — update `docker-compose.yaml` if needed
+- Docker port exposure (5050) — update `docker/docker-compose.yaml` if needed
 - Add `flask>=3.0` to `docker/requirements.txt`
 
 **Test:** Open `http://localhost:5050` in browser. Verify parts appear with

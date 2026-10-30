@@ -13,16 +13,16 @@ ros2 launch plm_bridge_ros plm_bridge.launch.py plm_backends:=dx3 picker_port:=5
 
 | Launch argument | Parameter | Default |
 |---|---|---|
-| `plm_backends` | `catalog.backends` | `$PLM_BACKENDS`, else `dx3` |
-| `sync_interval` | `catalog.sync_interval` | `300` (0 disables the timer) |
-| `sync_on_startup` | `catalog.sync_on_startup` | `true` |
-| `mesh_units` | `catalog.mesh_units` | `mm` |
-| `picker` | `catalog.picker_enabled` | `true` |
-| `picker_port` | `catalog.picker_port` | `5050` |
-| `describe_plans_service` | `catalog.describe_plans_service` | empty (no producer) |
-| `namespace` | `catalog.namespace` | `catalog` |
+| `plm_backends` | `core.backends` | `$PLM_BACKENDS`, else `dx3` |
+| `sync_interval` | `core.sync_interval` | `300` (0 disables the timer) |
+| `sync_on_startup` | `core.sync_on_startup` | `true` |
+| `mesh_units` | `core.mesh_units` | `mm` |
+| `picker` | `core.picker_enabled` | `true` |
+| `picker_port` | `core.picker_port` | `5050` |
+| `describe_plans_service` | `core.describe_plans_service` | empty (no producer) |
+| `namespace` | `core.namespace` | `catalog` |
 
-Every `CoreConfig` field is a `catalog.<field>` parameter, and every field of
+Every `CoreConfig` field is a `core.<field>` parameter, and every field of
 a backend's settings is `<backend>.<field>` (e.g. `dx3.bookmark_scope`).
 Credentials are never parameters; they come from the environment.
 
