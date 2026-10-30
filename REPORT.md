@@ -66,7 +66,7 @@ ViewpointGeneration `plm-bridge` commit `88445ad`.
   `summary_text`, `change_token` and `generated_at`, alongside the old fields.
 - **Plans table.** It has new columns, and versioned migrations
   (`PRAGMA user_version`) back the database up first. A copy of the real
-  `catalog.db` (11 plan rows across 2 parts) migrated with a `.bak` file
+  `catalog.db` (7 plan rows across 2 parts) migrated with a `.bak` file
   written; the legacy counts became `summary_text`/`stage_rank`.
 - **Orphan adoption.** It moved to the producer through a new
   `DescribePlans` service on the VG node, plus a
@@ -114,6 +114,36 @@ ViewpointGeneration `plm-bridge` commit `52ae8b6`.
 - **Live smoke S1–S6.** All pass, plus X1 (Scan for files through the
   producer) and X2 (`list_backends`). S3 now downloads into the new layout.
 
+## Phase 4: extract to the new repository
+
+plm_bridge commit `fbdd07b`; ViewpointGeneration `plm-bridge` commit
+`b23e871`; inspection-docker `plm-bridge` commit `2f4efa8`.
+
+- **The four packages are in this repository:** `cad_loader`,
+  `plm_interfaces`, `plm_bridge` and `plm_bridge_ros`. History is fresh;
+  the first commit names the source commit.
+- **ViewpointGeneration** no longer contains the catalog, the picker or the
+  STEP loader. It depends on `plm_interfaces` and `cad_loader`, and its
+  bringup includes `plm_bridge.launch.py` when `catalog:=true` (logging a
+  message if the package is missing).
+- **inspection-docker:** `shared.repos` adds plm_bridge and points
+  ViewpointGeneration at `plm-bridge`. `docker-compose.yaml` and
+  `.env.example` gain `PLM_BACKENDS`, `DX_DOCUMENT_LINKS`,
+  `CATALOG_TITLE_PREFIX` and `PLAN_DESCRIBE_CMD`, and `.env.example`'s
+  tenant values became placeholders. The 3DX docs moved here, scrubbed, with
+  a pointer left behind.
+- **Build.** A clean `colcon build` of all six packages (plm_bridge's four
+  plus ViewpointGeneration's two) succeeds in the jazzy container.
+- **Tests:**
+  - colcon workspace: `plm_bridge` 71 passed (1 skip), `cad_loader` 3,
+    `plm_bridge_ros` 1, ViewpointGeneration 16.
+  - Plain Python 3.12 virtualenv with no ROS (all dependencies from PyPI,
+    numpy 2.5, cadquery-ocp 8.0.1): `cad_loader` and `plm_bridge` 74
+    passed, 1 skipped. The `plm-bridge` console script works.
+- **Live smoke S1–S6.** All pass with the extracted packages (`plm_bridge`
+  node, `plm_interfaces`), plus X1 and X2. The migration ran again from the
+  pristine copy of the real database.
+
 ## Tenant objects created
 
 | When (UTC) | System | Kind | ID | Title | By |
@@ -122,6 +152,7 @@ ViewpointGeneration `plm-bridge` commit `52ae8b6`.
 | 2026-10-30T21:39:58Z | 3DX | Document | `9B76B1F917A924006AE50EAB00023334` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 1 smoke S4 |
 | 2026-10-30T22:00:40Z | 3DX | Document | `F74C7BC56D720F006AE5138700026864` | `TEST_PLM_BRIDGE_CONTRACT_PLAN` | Phase 2 contract fixture recording |
 | 2026-10-30T22:08:17Z | 3DX | Document | `9B76B1F917A924006AE51550000237A2` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 2 smoke S4 |
+| 2026-10-30T22:17:59Z | 3DX | Document | `F74C7BC56D720F006AE5179500026A90` | `TEST_PLM_BRIDGE_PLAN_<part number of "Test">_A.1_ORDERED` | Phase 4 smoke S4 |
 
 ## Open issues found so far
 
