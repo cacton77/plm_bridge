@@ -1,0 +1,4 @@
+# pip install './plm_bridge[dx3,picker]'  -- metadata lives in setup.py, shared with colcon.
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
